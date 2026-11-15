@@ -1,0 +1,114 @@
+{
+  "source": "Copy of Infografis_Data_Ploting_15-11-2026.xlsx",
+  "sheet": "Data",
+  "disclaimer": "Jumlah entri pada Excel terbaru; tidak dapat memastikan individu unik tanpa pengenal.",
+  "total": 2000,
+  "gender": [
+    {
+      "label": "Perempuan",
+      "value": 1456,
+      "percent": 72.8
+    },
+    {
+      "label": "Laki - Laki",
+      "value": 544,
+      "percent": 27.2
+    }
+  ],
+  "subjects": [
+    {
+      "label": "Guru Kelas MI",
+      "value": 1107,
+      "percent": 55.35
+    },
+    {
+      "label": "Pendidikan Agama Islam",
+      "value": 427,
+      "percent": 21.35
+    },
+    {
+      "label": "Guru Kelas RA",
+      "value": 207,
+      "percent": 10.35
+    },
+    {
+      "label": "Fikih",
+      "value": 64,
+      "percent": 3.2
+    },
+    {
+      "label": "Akidah Akhlak",
+      "value": 63,
+      "percent": 3.15
+    },
+    {
+      "label": "Bahasa Arab",
+      "value": 59,
+      "percent": 2.95
+    },
+    {
+      "label": "Qur'an Hadits",
+      "value": 48,
+      "percent": 2.4
+    },
+    {
+      "label": "Sejarah Kebudayaan Islam",
+      "value": 25,
+      "percent": 1.25
+    }
+  ],
+  "provinces": [
+    {
+      "label": "JAWA TIMUR",
+      "value": 1058,
+      "percent": 52.9
+    },
+    {
+      "label": "DI YOGYAKARTA",
+      "value": 580,
+      "percent": 29.0
+    },
+    {
+      "label": "JAWA BARAT",
+      "value": 172,
+      "percent": 8.6
+    },
+    {
+      "label": "BANTEN",
+      "value": 101,
+      "percent": 5.05
+    },
+    {
+      "label": "BALI",
+      "value": 64,
+      "percent": 3.2
+    },
+    {
+      "label": "JAWA TENGAH",
+      "value": 25,
+      "percent": 1.25
+    }
+  ],
+  "employment": [
+    {
+      "label": "Belum terisi",
+      "value": 1426,
+      "percent": 71.3
+    },
+    {
+      "label": "NON ASN",
+      "value": 523,
+      "percent": 26.15
+    },
+    {
+      "label": "PPPK",
+      "value": 31,
+      "percent": 1.55
+    },
+    {
+      "label": "PNS",
+      "value": 20,
+      "percent": 1.0
+    }
+  ]
+}
