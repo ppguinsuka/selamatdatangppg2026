@@ -13,6 +13,98 @@ const opacityAt=(t:number,start:number,end:number)=>ease((t-start+.65)/1.3)*(1-e
 const STARS=Array.from({length:92},(_,i)=>({x:((i*241+97)%1913),y:((i*367+23)%1071),r:(i%5===0?2.7:1.15),speed:(i%7+1)*.38}));
 const S=(str:string)=>staticFile(str.replace(/^\//,''));
 
+
+// Satu partikel memiliki ID tetap. Posisi targetnya berubah secara kontinu
+// pada batas antar-segmen sehingga bentuk benar-benar morph, bukan hard-cut.
+const MORPH_COUNT=180;
+const TAU=Math.PI*2;
+type MorphKind=typeof SECTIONS[number]['id'];
+const fract=(n:number)=>n-Math.floor(n);
+const mix=(a:number,b:number,p:number)=>a+(b-a)*p;
+const morphPoint=(kind:MorphKind,i:number,t:number):[number,number]=>{
+  const f=i/MORPH_COUNT,theta=f*TAU;
+  if(kind==='opening'){
+    const angle=f*TAU*4.7+t*.16;
+    return [960+Math.cos(angle)*(85+650*f),540+Math.sin(angle)*(70+340*f)];
+  }
+  if(kind==='university'){
+    const ring=i%4, u=Math.floor(i/4)/(MORPH_COUNT/4),a=u*TAU+t*.085*(ring%2?1:-1);
+    return [960+Math.cos(a)*(260+ring*145),530+Math.sin(a)*(135+ring*73)];
+  }
+  if(kind==='fitk'){
+    // Tiga helai daun berpola radial, tersusun dari dua sisi yang saling melengkapi.
+    const leaf=i%3,u=Math.floor(i/3)/(MORPH_COUNT/3);
+    const side=u<.5?1:-1,progress=u<.5?u*2:(u-.5)*2;
+    const a=-Math.PI/2+leaf*TAU/3;
+    const radial=150+390*progress;
+    const width=Math.sin(progress*Math.PI)*185*side;
+    return [960+Math.cos(a)*radial-Math.sin(a)*width,540+Math.sin(a)*radial+Math.cos(a)*width];
+  }
+  if(kind==='program'){
+    const u=Math.floor(i/2)/(MORPH_COUNT/2),strand=i%2;
+    return [210+1500*u,540+185*Math.sin(u*TAU*3+t*.14+strand*Math.PI)];
+  }
+  if(kind==='teachers'){
+    const ring=i%4,u=Math.floor(i/4)/(MORPH_COUNT/4),a=u*TAU+t*.12*(ring%2?-1:1);
+    return [300+440*ring+Math.cos(a)*150,545+Math.sin(a)*150];
+  }
+  if(kind==='statistics'){
+    const bar=i%12,vertical=Math.floor(i/12)/14;
+    const heights=[210,430,300,570,390,500,330,650,400,540,265,470];
+    return [290+bar*123+Math.sin(t*.6+i)*5,880-heights[bar]*vertical];
+  }
+  // Penutup: mandala sepuluh kelopak membentuk satu bintang di tengah.
+  const a=theta+t*.06;
+  const radius=340+150*Math.cos(a*10);
+  return [960+Math.cos(a)*radius,530+Math.sin(a)*radius*.72];
+};
+const hexColor=(hex:string)=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+const mixedColor=(from:string,to:string,k:number)=>{
+  const a=hexColor(from),b=hexColor(to);
+  return `rgb(${a.map((n,i)=>Math.round(mix(n,b[i],k))).join(',')})`;
+};
+function MorphParticles({t}:{t:number}){
+  let current=0;
+  for(let i=0;i<SECTIONS.length;i++) if(t>=SECTIONS[i].start)current=i;
+  let from=current,to=current,blend=0;
+  const fadeSeconds=1.8;
+  if(current>0 && t<SECTIONS[current].start+fadeSeconds){
+    from=current-1;to=current;
+    blend=ease((t-(SECTIONS[current].start-fadeSeconds))/(2*fadeSeconds));
+  }else if(current<SECTIONS.length-1 && t>SECTIONS[current+1].start-fadeSeconds){
+    from=current;to=current+1;
+    blend=ease((t-(SECTIONS[current+1].start-fadeSeconds))/(2*fadeSeconds));
+  }
+  const source=SECTIONS[from],target=SECTIONS[to];
+  const color=mixedColor(source.color,target.color,blend);
+  const positions=Array.from({length:MORPH_COUNT},(_,i)=>{
+    const [x,y]=morphPoint(source.id,i,t);
+    const [nx,ny]=morphPoint(target.id,i,t);
+    const drift=fract(Math.sin((i+1)*72.294)*43758.52);
+    const depth=.38+drift*.62;
+    return {
+      x:mix(x,nx,blend)+Math.sin(t*.45+i*1.9)*10*depth,
+      y:mix(y,ny,blend)+Math.cos(t*.37+i*1.3)*8*depth,
+      r:(i%9===0?3.8:1.4+(i%4)*.45)*depth,
+      opacity:(.15+.55*(.5+.5*Math.sin(t*.65+i*.41)))*depth
+    };
+  });
+  return <svg viewBox="0 0 1920 1080" width="1920" height="1080" aria-hidden="true" style={{position:'absolute',inset:0,opacity:.8,pointerEvents:'none',mixBlendMode:'screen'}}>
+    <defs>
+      <radialGradient id="morphAmbient">
+        <stop stopColor={color} stopOpacity=".14"/>
+        <stop offset="1" stopColor={color} stopOpacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="960" cy="540" rx="800" ry="480" fill="url(#morphAmbient)"/>
+    {positions.filter((_,i)=>i%7===0&&i+1<positions.length).map((pos,i)=>{
+      const next=positions[i*7+1];
+      return <line key={'l'+i} x1={pos.x} y1={pos.y} x2={next.x} y2={next.y} stroke={color} strokeWidth="1.1" opacity={pos.opacity*.28}/>;
+    })}
+    {positions.map((pos,i)=><circle key={i} cx={pos.x} cy={pos.y} r={pos.r} fill={i%6===0?GOLD:color} opacity={pos.opacity}/>)}
+  </svg>;
+}
+
 function GlobalWorld({t}:{t:number}){
   const shiftX=54*Math.sin(t*.085),shiftY=32*Math.cos(t*.09),spin=t*1.5;
   return <AbsoluteFill style={{background:'radial-gradient(ellipse at 70% 32%,#143E43 0%,transparent 49%),radial-gradient(ellipse at 18% 75%,#183759 0%,transparent 60%),#05101F',overflow:'hidden'}}>
@@ -26,9 +118,8 @@ function GlobalWorld({t}:{t:number}){
       {STARS.map((star,i)=><circle key={i} cx={(star.x+t*star.speed*6)%1930} cy={(star.y+t*star.speed*2.3)%1090} r={star.r} fill={i%4===0?GOLD:'#ACF7E4'} opacity={.22+.5*(.5+.5*Math.sin(t*(.28+star.speed*.03)+i))}/>)}
       {[0,1,2,3,4].map((i)=><path key={i} d={`M${-200+20*i} ${120+185*i+Math.sin(t*.25+i)*32} Q960 ${210+140*i+Math.sin(t*.16+i)*72} 2200 ${-30+160*i}`} fill="none" stroke={i%2?GOLD:MINT} strokeOpacity={.06+i*.012} strokeWidth={i===2?3:1.5}/>) }
     </svg>
+    <MorphParticles t={t}/>
     <AbsoluteFill style={{border:'38px solid rgba(183,234,222,.012)',pointerEvents:'none'}}/>
-    <div style={{position:'absolute',left:85,bottom:57,letterSpacing:8,fontSize:20,color:'rgba(207,235,239,.46)',fontWeight:700}}>UIN SUNAN KALIJAGA <span style={{color:GOLD}}> / </span> PPG 2026</div>
-    <div style={{position:'absolute',right:90,bottom:57,letterSpacing:5,fontSize:18,color:'rgba(207,235,239,.40)'}}>CINEMATIC WELCOME EXPERIENCE</div>
   </AbsoluteFill>;
 }
 const ShimmerLine=({width=660,style}:{width?:number;style?:React.CSSProperties})=><div style={{width,height:3,background:`linear-gradient(90deg,transparent,${GOLD},${MINT},transparent)`,boxShadow:`0 0 32px ${GOLD}60`,...style}}/>;
@@ -54,7 +145,6 @@ function Opening({t,props}:{t:number;props:StudioProps}){
       <BrandMark src={LOGOS[2].src} width={210} height={155}/>
     </div>
     <div style={{position:'absolute',top:350,textAlign:'center',width:1750}}>
-      <div style={{fontSize:26,fontWeight:700,letterSpacing:14,color:GOLD,opacity:stagger(t,2.8)}}>UNIVERSITAS ISLAM NEGERI SUNAN KALIJAGA</div>
       <div style={{marginTop:35,fontWeight:900,fontSize:125,lineHeight:1.02,letterSpacing:5,color:WHITE,textShadow:'0 14px 90px rgba(90,247,216,.24)',opacity:first,transform:`translateY(${(1-first)*110}px) scale(${1.1-first*.1})`}}>{main}</div>
       <div style={{marginTop:20,fontWeight:900,fontSize:91,lineHeight:1.08,letterSpacing:3,color:GOLD,textShadow:'0 0 66px rgba(250,209,116,.25)',opacity:secondReveal,transform:`translateY(${(1-secondReveal)*80}px) rotateX(${(1-secondReveal)*-35}deg)`}}>{second}</div>
       <div style={{display:'flex',justifyContent:'center',margin:'35px auto 27px',opacity:third}}><ShimmerLine width={980}/></div>
@@ -91,7 +181,6 @@ function PortraitCard({person,rel,odd}:{person:Person;rel:number;odd:boolean}){
       <div style={{position:'absolute',left:0,right:0,bottom:0,height:95,background:'linear-gradient(transparent,rgba(5,17,30,.67))'}}/>
     </div>
     <div style={{position:'absolute',left:textX,top:425,width:870,opacity:textStart,transform:`translateY(${(1-textStart)*68}px) translateX(${Math.sin(rel*.28)*12}px)`}}>
-      <div style={{fontSize:22,color:MINT,fontWeight:800,letterSpacing:9,marginBottom:22}}>PENDIDIKAN PROFESI GURU · 2026</div>
       <div style={{fontSize:person.name.length>40?59:69,fontWeight:900,color:WHITE,lineHeight:1.18,textShadow:'0 12px 70px rgba(0,0,0,.4)',maxWidth:870}}>{person.name}</div>
       <ShimmerLine width={570} style={{marginTop:30,marginBottom:25}}/>
       <div style={{fontSize:38,color:GOLD,fontWeight:760,letterSpacing:1}}>{person.role}</div>
@@ -116,7 +205,6 @@ function GroupScene({group,t,people}:{group:PersonGroup;t:number;people:Person[]
   const totalSlots=items.length*info.slot;
   const elapsed=t-info.intro;
   const groupSpecific=group==='university'?'PIMPINAN UNIVERSITAS MENGUCAPKAN SELAMAT DATANG KEPADA MAHASISWA PPG':info.subtitle;
-  const headingFade=1-stagger(t,info.intro+1.3,1);
   return <AbsoluteFill style={{perspective:1300}}>
     <GroupHeading title={info.title} subtitle={groupSpecific} t={t} top={120}/>
     {t<info.intro+2 && <div style={{position:'absolute',top:490,left:150,width:1580,opacity:stagger(t,.4,1)*(1-stagger(t,info.intro+.7,.7)),transform:`translateY(${Math.sin(t*.5)*20}px)`,fontSize:39,fontWeight:660,color:'#BED9DC',letterSpacing:5}}>SELAMAT DATANG • MAHASISWA PPG ANGKATAN 2026</div>}
@@ -126,7 +214,6 @@ function GroupScene({group,t,people}:{group:PersonGroup;t:number;people:Person[]
       return <PortraitCard key={person.id} person={person} rel={slot} odd={i%2===1}/>;
     })}
     {elapsed>totalSlots-.1 && <GroupEnsemble people={items} t={elapsed-totalSlots}/>}
-    <div style={{position:'absolute',right:150,top:115,color:'#80B8B9',fontSize:22,fontWeight:680,letterSpacing:4,opacity:1-headingFade*.2}}>{String(items.length).padStart(2,'0')} TOKOH</div>
     <div style={{position:'absolute',right:150,bottom:105,display:'flex',gap:12}}>{items.map((p,i)=><div key={p.id} style={{width:i===Math.floor(elapsed/info.slot)?58:15,height:8,borderRadius:9,background:i===Math.floor(elapsed/info.slot)?GOLD:'#ABDDC840',transition:'none'}}/>)}</div>
   </AbsoluteFill>;
 }
