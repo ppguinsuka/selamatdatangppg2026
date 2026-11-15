@@ -12,7 +12,7 @@ export const SECTIONS = [
   {id:'fitk', title:'Dekanat & Kabag TU', short:'FITK', start:50, duration:45, color:'#58b79b', tag:'FACULTY'},
   {id:'program', title:'Kaprodi & Sekprodi', short:'Program Studi', start:95, duration:21, color:'#78a8ed', tag:'PROGRAM'},
   {id:'teachers', title:'Wali Kelas I–IV', short:'Wali Kelas', start:116, duration:33, color:'#55c6cb', tag:'MENTORS'},
-  {id:'statistics', title:'Statistik Lapor Diri', short:'Statistik', start:149, duration:45, color:'#c5a8ff', tag:'DATA UNIVERSE'},
+  {id:'statistics', title:'Statistik Ploting PPG', short:'Statistik', start:149, duration:45, color:'#c5a8ff', tag:'DATA UNIVERSE'},
   {id:'closing', title:'Grand Closing', short:'Closing', start:194, duration:10, color:'#d8bc78', tag:'CLOSING'},
 ] as const;
 

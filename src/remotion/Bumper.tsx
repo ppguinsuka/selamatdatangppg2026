@@ -10,13 +10,13 @@ const m=(x:number,min=0,max=1)=>Math.min(max,Math.max(min,x));
 const ease=(x:number)=>{const a=m(x);return a*a*(3-2*a)};
 const stagger=(t:number,delay:number,len=.9)=>ease((t-delay)/len);
 const opacityAt=(t:number,start:number,end:number)=>ease((t-start+.65)/1.3)*(1-ease((t-end+.65)/1.3));
-const STARS=Array.from({length:92},(_,i)=>({x:((i*241+97)%1913),y:((i*367+23)%1071),r:(i%5===0?2.7:1.15),speed:(i%7+1)*.38}));
+const STARS=Array.from({length:240},(_,i)=>({x:((i*241+97)%1913),y:((i*367+23)%1071),r:(i%5===0?2.7:1.15),speed:(i%7+1)*.38}));
 const S=(str:string)=>staticFile(str.replace(/^\//,''));
 
 
 // Satu partikel memiliki ID tetap. Posisi targetnya berubah secara kontinu
 // pada batas antar-segmen sehingga bentuk benar-benar morph, bukan hard-cut.
-const MORPH_COUNT=180;
+const MORPH_COUNT=960;
 const TAU=Math.PI*2;
 type MorphKind=typeof SECTIONS[number]['id'];
 const fract=(n:number)=>n-Math.floor(n);
@@ -49,7 +49,7 @@ const morphPoint=(kind:MorphKind,i:number,t:number):[number,number]=>{
     return [300+440*ring+Math.cos(a)*150,545+Math.sin(a)*150];
   }
   if(kind==='statistics'){
-    const bar=i%12,vertical=Math.floor(i/12)/14;
+    const bar=i%12,vertical=Math.floor(i/12)/(MORPH_COUNT/12-1);
     const heights=[210,430,300,570,390,500,330,650,400,540,265,470];
     return [290+bar*123+Math.sin(t*.6+i)*5,880-heights[bar]*vertical];
   }
@@ -85,11 +85,11 @@ function MorphParticles({t}:{t:number}){
     return {
       x:mix(x,nx,blend)+Math.sin(t*.45+i*1.9)*10*depth,
       y:mix(y,ny,blend)+Math.cos(t*.37+i*1.3)*8*depth,
-      r:(i%9===0?3.8:1.4+(i%4)*.45)*depth,
-      opacity:(.15+.55*(.5+.5*Math.sin(t*.65+i*.41)))*depth
+      r:(i%19===0?4.6:1.6+(i%5)*.48)*depth,
+      opacity:(.24+.68*(.5+.5*Math.sin(t*.65+i*.41)))*depth
     };
   });
-  return <svg viewBox="0 0 1920 1080" width="1920" height="1080" aria-hidden="true" style={{position:'absolute',inset:0,opacity:.8,pointerEvents:'none',mixBlendMode:'screen'}}>
+  return <svg viewBox="0 0 1920 1080" width="1920" height="1080" aria-hidden="true" style={{position:'absolute',inset:0,opacity:.95,pointerEvents:'none',mixBlendMode:'screen'}}>
     <defs>
       <radialGradient id="morphAmbient">
         <stop stopColor={color} stopOpacity=".14"/>
@@ -97,10 +97,12 @@ function MorphParticles({t}:{t:number}){
       </radialGradient>
     </defs>
     <ellipse cx="960" cy="540" rx="800" ry="480" fill="url(#morphAmbient)"/>
-    {positions.filter((_,i)=>i%7===0&&i+1<positions.length).map((pos,i)=>{
-      const next=positions[i*7+1];
-      return <line key={'l'+i} x1={pos.x} y1={pos.y} x2={next.x} y2={next.y} stroke={color} strokeWidth="1.1" opacity={pos.opacity*.28}/>;
+    {positions.filter((_,i)=>i%11===0&&i+1<positions.length).map((pos,i)=>{
+      const next=positions[i*11+1];
+      return <line key={'l'+i} x1={pos.x} y1={pos.y} x2={next.x} y2={next.y} stroke={color} strokeWidth="1.15" opacity={pos.opacity*.42}/>;
     })}
+    {/* Kilau lembut di belakang sekitar 5% butiran, tanpa filter blur berat. */}
+    {positions.filter((_,i)=>i%21===0).map((pos,i)=><circle key={'glow'+i} cx={pos.x} cy={pos.y} r={pos.r*5} fill={i%3===0?GOLD:color} opacity={pos.opacity*.13}/>)}
     {positions.map((pos,i)=><circle key={i} cx={pos.x} cy={pos.y} r={pos.r} fill={i%6===0?GOLD:color} opacity={pos.opacity}/>)}
   </svg>;
 }
@@ -162,7 +164,7 @@ function GroupHeading({title,subtitle,t,top=112}:{title:string;subtitle:string;t
   </div>;
 }
 const GROUP_META:{[K in PersonGroup]:{title:string,subtitle:string,intro:number,slot:number}}={
-  university:{title:'Pimpinan Universitas Mengucapkan Selamat Datang',subtitle:'UIN SUNAN KALIJAGA YOGYAKARTA',intro:4,slot:7},
+  university:{title:'Pimpinan Universitas Mengucapkan Selamat Datang',subtitle:'KEPADA MAHASISWA PPG 2026',intro:4,slot:7},
   fitk:{title:'Fakultas Ilmu Tarbiyah dan Keguruan',subtitle:'JAJARAN DEKANAT DAN TATA USAHA',intro:4,slot:7},
   program:{title:'Pengelola Program Studi PPG',subtitle:'KAPRODI DAN SEKRETARIS PROGRAM STUDI',intro:3,slot:7},
   teachers:{title:'Mengenal Wali Kelas PPG 2026',subtitle:'EMPAT WALI KELAS • SATU SEMANGAT',intro:3,slot:7},
@@ -204,10 +206,9 @@ function GroupScene({group,t,people}:{group:PersonGroup;t:number;people:Person[]
   const info=GROUP_META[group];
   const totalSlots=items.length*info.slot;
   const elapsed=t-info.intro;
-  const groupSpecific=group==='university'?'PIMPINAN UNIVERSITAS MENGUCAPKAN SELAMAT DATANG KEPADA MAHASISWA PPG':info.subtitle;
+  // Sambutan pimpinan hanya muncul satu kali dalam judul; subjudul melengkapi tanpa mengulang.
   return <AbsoluteFill style={{perspective:1300}}>
-    <GroupHeading title={info.title} subtitle={groupSpecific} t={t} top={120}/>
-    {t<info.intro+2 && <div style={{position:'absolute',top:490,left:150,width:1580,opacity:stagger(t,.4,1)*(1-stagger(t,info.intro+.7,.7)),transform:`translateY(${Math.sin(t*.5)*20}px)`,fontSize:39,fontWeight:660,color:'#BED9DC',letterSpacing:5}}>SELAMAT DATANG • MAHASISWA PPG ANGKATAN 2026</div>}
+    <GroupHeading title={info.title} subtitle={info.subtitle} t={t} top={120}/>
     {items.map((person,i)=>{
       const slot=elapsed-i*info.slot;
       if(slot<-.65||slot>info.slot+.15)return null;
@@ -225,7 +226,7 @@ function StatisticsScene({t,stats}:{t:number;stats:StudioProps['stats']}){
   const phases=[{a:0,b:4},{a:4,b:11},{a:11,b:18},{a:18,b:32},{a:32,b:42},{a:42,b:45}];
   const active=(i:number)=>opacityAt(t,phases[i].a,phases[i].b);
   return <AbsoluteFill>
-    <GroupHeading title="Statistik Data Lapor Diri PPG 2026" subtitle="INFOGRAFIS BERGERAK • 15 NOVEMBER 2026" t={t} top={105}/>
+    <GroupHeading title="Statistik Ploting PPG 2026" subtitle="UIN SUNAN KALIJAGA YOGYAKARTA" t={t} top={105}/>
     <AbsoluteFill style={{opacity:active(0),alignItems:'center',justifyContent:'center'}}>
       <div style={{fontSize:29,letterSpacing:11,color:MINT,fontWeight:700}}>DATA UNIVERSE</div>
       <div style={{fontSize:104,fontWeight:900,color:WHITE,marginTop:25,transform:`scale(${.75+stagger(t,.3,3)*.25})`}}>SETIAP ANGKA, SEBUAH CERITA</div>
@@ -233,10 +234,9 @@ function StatisticsScene({t,stats}:{t:number;stats:StudioProps['stats']}){
     </AbsoluteFill>
     <AbsoluteFill style={{opacity:active(1),alignItems:'center',justifyContent:'center'}}>
       <div style={{position:'absolute',width:950,height:950,borderRadius:'50%',border:`3px solid ${GOLD}44`,boxShadow:`0 0 90px ${GOLD}12`,transform:`rotate(${t*12}deg)`}}/>
-      <div style={{fontSize:35,color:MINT,letterSpacing:11,fontWeight:760}}>TOTAL DATA LAPOR DIRI</div>
+      <div style={{fontSize:35,color:MINT,letterSpacing:11,fontWeight:760}}>TOTAL DATA PLOTING PPG</div>
       <div style={{fontSize:235,fontWeight:900,color:GOLD,letterSpacing:-8,textShadow:`0 0 90px ${GOLD}50`,lineHeight:1.22}}><CountNumber num={stats.total} t={t-4}/></div>
-      <div style={{fontSize:37,color:WHITE,fontWeight:690}}>ENTRI DALAM WORKBOOK TERBARU</div>
-      <div style={{fontSize:20,color:'#AECBD2',marginTop:24}}>Berdasarkan berkas {stats.source}</div>
+      <div style={{fontSize:37,color:WHITE,fontWeight:690}}>DATA PLOTING DI UIN SUNAN KALIJAGA</div>
     </AbsoluteFill>
     <AbsoluteFill style={{opacity:active(2),alignItems:'center',justifyContent:'center'}}>
       <div style={{display:'flex',gap:60,marginTop:160}}>
@@ -262,7 +262,7 @@ function StatisticsScene({t,stats}:{t:number;stats:StudioProps['stats']}){
       <div style={{position:'absolute',left:150,top:325,width:750}}>
         <div style={{fontSize:28,letterSpacing:7,color:MINT,fontWeight:700}}>6 PROVINSI TEMPAT TUGAS</div>
         <div style={{fontSize:95,fontWeight:900,color:GOLD,marginTop:14}}>INDONESIA</div>
-        <div style={{fontSize:31,color:'#B8D9DE',lineHeight:1.5,marginTop:18}}>Sebaran berdasarkan provinsi tempat tugas yang tercatat dalam Excel terbaru.</div>
+        <div style={{fontSize:31,color:'#B8D9DE',lineHeight:1.5,marginTop:18}}>Sebaran provinsi tempat tugas peserta PPG yang diploting di UIN Sunan Kalijaga.</div>
         <svg width="640" height="280" viewBox="0 0 640 280" style={{marginTop:45}}>
           <path d="M45 178 Q113 100 178 158 T301 150 T435 166 T583 121" fill="none" stroke={GOLD} strokeWidth="5" strokeOpacity=".6" strokeDasharray="8 17"/>
           {[[52,171],[167,147],[280,156],[402,164],[496,134],[585,121]].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r={11+3*Math.sin(t+i)} fill={MINT} opacity={stagger(t-32,i*.4,.7)}/><circle cx={x} cy={y} r="25" fill="none" stroke={GOLD} strokeOpacity={.4} /></g>)}

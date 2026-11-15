@@ -33,8 +33,8 @@ export async function POST(request:Request){
    if(!rows.length)return NextResponse.json({error:'Tidak ada baris data untuk diolah.'},{status:422});
    const total=rows.length;
    const stats:Stats={
-     source:file.name,sheet:sheet.name,
-     disclaimer:'Jumlah entri pada Excel terbaru; tidak dapat memastikan individu unik tanpa pengenal.',
+     source:'Data Ploting Mahasiswa PPG UIN Sunan Kalijaga',sheet:sheet.name,
+     disclaimer:'Angka menunjukkan jumlah entri data ploting PPG di UIN Sunan Kalijaga. Jumlah individu unik belum dapat dipastikan tanpa identitas pembanding.',
      total,
      gender:counts(rows.map(r=>r[0]),total),
      subjects:counts(rows.map(r=>r[1]),total),
