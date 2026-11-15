@@ -1,0 +1,20 @@
+{
+  "validation": "static verification successful",
+  "duration_sec": 204,
+  "fps": 30,
+  "frame_count": 6120,
+  "resolution": "1920x1080",
+  "portraits": 15,
+  "logos_rgba": 3,
+  "originals": 19,
+  "excel_source": "Copy of Infografis_Data_Ploting_15-11-2026.xlsx",
+  "total_entries": 2000,
+  "subjects": 8,
+  "provinces": 6,
+  "music_seconds_approx": 204,
+  "sfx_seconds_approx": 204,
+  "source_syntax": "13 TypeScript files parsed successfully",
+  "npm_install": "not run: registry.npmjs.org unavailable",
+  "next_build": "not run: dependencies unavailable",
+  "mp4_render": "not run: dependencies unavailable; render API and CLI included"
+}

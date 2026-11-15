@@ -1,0 +1,33 @@
+{
+  "name": "ppg-2026-cinematic-motion-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cinematic PPG 2026 video studio — Next.js + Remotion, actual 15 portraits and official statistics",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "studio": "remotion studio src/remotion/index.ts",
+    "render:mp4": "remotion render src/remotion/index.ts PPG2026 out/PPG2026_FullHD.mp4 --codec h264 --audio-codec aac --concurrency 2",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "15.5.4",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.543",
+    "@remotion/player": "4.0.543",
+    "@remotion/media": "4.0.543",
+    "@remotion/renderer": "4.0.543",
+    "@remotion/bundler": "4.0.543",
+    "@remotion/cli": "4.0.543",
+    "exceljs": "4.4.0",
+    "lucide-react": "0.468.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "typescript": "5.8.3"
+  }
+}
